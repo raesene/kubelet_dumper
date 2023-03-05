@@ -16,6 +16,20 @@ func Dump() {
 	if err != nil {
 		log.Print(err)
 	}
+
+	hostPathVolume := v1.Volume{
+		Name: "kubelet",
+		VolumeSource: v1.VolumeSource{
+			HostPath: &v1.HostPathVolumeSource{
+				Path: "/var/lib/kubelet",
+			},
+		},
+	}
+
+	hostPathVolumeMount := v1.VolumeMount{
+		Name:      "kubelet",
+		MountPath: "/var/lib/kubelet",
+	}
 	//create a pod in the cluster
 	pod, err := clientset.CoreV1().Pods("default").Create(context.TODO(), &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -24,13 +38,19 @@ func Dump() {
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
 				{
-					Name:  "kubelet-dumper",
-					Image: "busybox",
+					Name:         "kubelet-dumper",
+					Image:        "ubuntu:22.04",
+					VolumeMounts: []v1.VolumeMount{hostPathVolumeMount},
 					Command: []string{
-						"whoami",
+						"/bin/bash", "-c",
+					},
+					Args: []string{
+						"ps -fC kubelet && cat /var/lib/kubelet/config.yaml",
 					},
 				},
 			},
+			HostPID:       true,
+			Volumes:       []v1.Volume{hostPathVolume},
 			RestartPolicy: v1.RestartPolicyNever,
 		},
 	}, metav1.CreateOptions{})
@@ -49,7 +69,7 @@ func Dump() {
 	podLogOpts := &v1.PodLogOptions{}
 	podLogs, err := clientset.CoreV1().Pods("default").GetLogs("kubelet-dumper", podLogOpts).Stream(context.Background())
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 	}
 	defer podLogs.Close()
 
@@ -88,6 +108,9 @@ func WaitForPodRunning(clientset *kubernetes.Clientset, namespace string, podNam
 			}
 			if pod.Status.Phase == v1.PodSucceeded {
 				return nil
+			}
+			if pod.Status.Phase == v1.PodFailed {
+				return fmt.Errorf("Pod %q failed", podName)
 			}
 			time.Sleep(5 * time.Second)
 		}
