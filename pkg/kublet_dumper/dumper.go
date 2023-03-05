@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
@@ -34,7 +35,8 @@ func Dump(nodename string) {
 		Name:      "kubelet",
 		MountPath: "/var/lib/kubelet",
 	}
-	podName := "kubelet-dumper-" + nodename
+	safenodename := strings.ReplaceAll(nodename, ".", "-")
+	podName := "kubelet-dumper-" + safenodename
 	//create a pod in the cluster
 	pod, err := clientset.CoreV1().Pods("default").Create(context.TODO(), &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
