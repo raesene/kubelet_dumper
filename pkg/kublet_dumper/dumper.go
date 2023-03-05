@@ -65,6 +65,11 @@ func Dump() {
 		}
 		fmt.Print(string(buf[:n]))
 	}
+	//Delete the pod
+	err = clientset.CoreV1().Pods("default").Delete(context.Background(), "kubelet-dumper", metav1.DeleteOptions{})
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 // WaitForPodRunning polls the Pod's status until it is in the "Running" state or the timeout is exceeded
