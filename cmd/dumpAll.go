@@ -5,8 +5,7 @@ Copyright © 2023 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
-	"fmt"
-
+	kubelet_dumper "github.com/raesene/kubelet_dumper/pkg/kublet_dumper"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +15,7 @@ var dumpAllCmd = &cobra.Command{
 	Short: "Dump the kubelet config from all nodes",
 	Long:  `Dumps the kubelet config from all nodes in the cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("dumpAll called")
+		kubelet_dumper.DumpAll()
 	},
 }
 

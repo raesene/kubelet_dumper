@@ -21,13 +21,14 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		//fmt.Println("dumpKubelet called")
-		kubelet_dumper.Dump()
+		//Dump the config from a specific nodename
+		kubelet_dumper.Dump(cmd.Flag("nodename").Value.String())
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(dumpKubeletCmd)
-
+	dumpKubeletCmd.Flags().StringP("nodename", "n", "", "The name of the node to dump the kubelet config from")
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command

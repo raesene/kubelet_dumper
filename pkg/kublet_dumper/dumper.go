@@ -11,7 +11,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func Dump() {
+func Dump(nodename string) {
 	clientset, err := initKubeClient()
 	if err != nil {
 		log.Print(err)
@@ -30,28 +30,31 @@ func Dump() {
 		Name:      "kubelet",
 		MountPath: "/var/lib/kubelet",
 	}
+	podName := "kubelet-dumper-" + nodename
 	//create a pod in the cluster
 	pod, err := clientset.CoreV1().Pods("default").Create(context.TODO(), &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "kubelet-dumper",
+			Name: podName,
 		},
 		Spec: v1.PodSpec{
 			Containers: []v1.Container{
 				{
-					Name:         "kubelet-dumper",
+					Name:         podName,
 					Image:        "ubuntu:22.04",
 					VolumeMounts: []v1.VolumeMount{hostPathVolumeMount},
 					Command: []string{
 						"/bin/bash", "-c",
 					},
 					Args: []string{
-						"ps -fC kubelet && cat /var/lib/kubelet/config.yaml",
+						//"ps -fC kubelet && cat /var/lib/kubelet/config.yaml",
+						"cat /var/lib/kubelet/config.yaml",
 					},
 				},
 			},
 			HostPID:       true,
 			Volumes:       []v1.Volume{hostPathVolume},
 			RestartPolicy: v1.RestartPolicyNever,
+			NodeName:      nodename,
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
@@ -61,13 +64,13 @@ func Dump() {
 	fmt.Printf("Created Pod %q.\n", pod.GetObjectMeta().GetName())
 
 	// Wait for the Pod to be in the "Running" state
-	err = WaitForPodRunning(clientset, "default", "kubelet-dumper", 5*time.Minute)
+	err = WaitForPodRunning(clientset, "default", podName, 5*time.Minute)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	podLogOpts := &v1.PodLogOptions{}
-	podLogs, err := clientset.CoreV1().Pods("default").GetLogs("kubelet-dumper", podLogOpts).Stream(context.Background())
+	podLogs, err := clientset.CoreV1().Pods("default").GetLogs(podName, podLogOpts).Stream(context.Background())
 	if err != nil {
 		log.Print(err)
 	}
@@ -86,7 +89,7 @@ func Dump() {
 		fmt.Print(string(buf[:n]))
 	}
 	//Delete the pod
-	err = clientset.CoreV1().Pods("default").Delete(context.Background(), "kubelet-dumper", metav1.DeleteOptions{})
+	err = clientset.CoreV1().Pods("default").Delete(context.Background(), podName, metav1.DeleteOptions{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -110,7 +113,7 @@ func WaitForPodRunning(clientset *kubernetes.Clientset, namespace string, podNam
 				return nil
 			}
 			if pod.Status.Phase == v1.PodFailed {
-				return fmt.Errorf("Pod %q failed", podName)
+				return fmt.Errorf("pod %q failed", podName)
 			}
 			time.Sleep(5 * time.Second)
 		}
