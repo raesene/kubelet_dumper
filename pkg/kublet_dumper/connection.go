@@ -1,3 +1,7 @@
+/*
+Copyright © 2023 Rory McCune rorym@mccune.org.uk
+
+*/
 package kubelet_dumper
 
 import (

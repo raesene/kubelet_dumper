@@ -1,3 +1,7 @@
+/*
+Copyright © 2023 Rory McCune rorym@mccune.org.uk
+
+*/
 package kubelet_dumper
 
 import (
@@ -60,9 +64,9 @@ func Dump(nodename string) {
 	if err != nil {
 		log.Print(err)
 	}
-
+	fmt.Println("---------------------")
 	fmt.Printf("Created Pod %q.\n", pod.GetObjectMeta().GetName())
-
+	fmt.Println("---------------------")
 	// Wait for the Pod to be in the "Running" state
 	err = WaitForPodRunning(clientset, "default", podName, 5*time.Minute)
 	if err != nil {
