@@ -22,7 +22,8 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		//fmt.Println("dumpKubelet called")
 		//Dump the config from a specific nodename
-		kubelet_dumper.Dump(cmd.Flag("nodename").Value.String())
+		//kubelet_dumper.Dump(cmd.Flag("nodename").Value.String())
+		kubelet_dumper.Dumpconfigz(cmd.Flag("nodename").Value.String())
 	},
 }
 

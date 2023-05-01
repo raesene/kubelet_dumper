@@ -6,6 +6,7 @@ package kubelet_dumper
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,6 +31,9 @@ func getNodes() []string {
 func DumpAll() {
 	nodes := getNodes()
 	for _, node := range nodes {
-		Dump(node)
+		fmt.Printf("Dumping config from node %s\n", node)
+		fmt.Println("-------------------------")
+		Dumpconfigz(node)
+		fmt.Println("-------------------------")
 	}
 }

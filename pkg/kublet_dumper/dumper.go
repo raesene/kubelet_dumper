@@ -5,6 +5,7 @@ Copyright © 2023 Rory McCune rorym@mccune.org.uk
 package kubelet_dumper
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -124,4 +125,21 @@ func WaitForPodRunning(clientset *kubernetes.Clientset, namespace string, podNam
 			time.Sleep(5 * time.Second)
 		}
 	}
+}
+
+func Dumpconfigz(nodename string) {
+	clientset, err := initKubeClient()
+	if err != nil {
+		log.Print(err)
+	}
+	proxyURL := fmt.Sprintf("/api/v1/nodes/%s:10250/proxy/configz", nodename)
+	proxyReq := clientset.CoreV1().RESTClient().Get().AbsPath(proxyURL)
+	proxyRes := proxyReq.Do(context.Background())
+	resp, err := proxyRes.Raw()
+	if err != nil {
+		log.Print(err)
+	}
+	body := bytes.NewBuffer(resp)
+
+	fmt.Println(body)
 }
